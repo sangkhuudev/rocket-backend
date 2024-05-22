@@ -1,24 +1,27 @@
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
+use serde::{Deserialize, Serialize};
 use crate::schema::{rustaceans, crates};
 
-#[derive(Debug, Clone, Queryable, )]
+#[derive(Debug, Clone, Queryable, AsChangeset, Serialize, Deserialize )]
 pub struct Rustacean {
+    #[serde(skip_deserializing)]
     pub id : i32,
     pub name: String,
     pub email: String,
+    #[serde(skip_deserializing)]
     pub created_at: NaiveDateTime
 }
 
 
-#[derive(Debug, Clone, Insertable )]
+#[derive(Debug, Clone, Insertable, Deserialize )]
 #[diesel(table_name=rustaceans)]
 pub struct NewRustacean {
     pub name: String,
     pub email: String,
 }
 
-#[derive(Debug, Clone, Queryable)]
+#[derive(Debug, Clone, Queryable, AsChangeset, Serialize, Deserialize )]
 pub struct Crate {
     pub id : i32,
     pub rustacean_id: i32,
@@ -30,7 +33,7 @@ pub struct Crate {
 }
 
 
-#[derive(Debug, Clone, Insertable)]
+#[derive(Debug, Clone, Insertable, Deserialize )]
 #[diesel(table_name=crates)]
 pub struct NewCrate {
     pub rustacean_id: i32,
