@@ -1,7 +1,7 @@
 use reqwest::{blocking::Client, StatusCode};
 use rocket::serde::json::{Value, serde_json::json};
 
-use crate::common::{create_test_rustacean, delete_test_rustacean};
+use crate::common::{create_test_rustacean, delete_test_rustacean, APP_HOST};
 pub mod common;
 
 
@@ -12,7 +12,7 @@ fn test_get_rustaceans() {
     let rustacean1 = create_test_rustacean(&client);
     let rustacean2 = create_test_rustacean(&client);
     let response = client
-        .get("http://127.0.0.1:8000/rustaceans")
+        .get(format!("{}/rustaceans", APP_HOST))
         .send()
         .unwrap();
     assert_eq!(response.status(), StatusCode::OK);
@@ -30,7 +30,7 @@ fn test_get_rustaceans() {
 fn test_create_rustacean() {
     let client = Client::new();
     let response = client
-        .post("http://127.0.0.1:8000/rustaceans")
+        .post(format!("{}/rustaceans", APP_HOST))
         .json(&json!({
             "name": "Rustacean",
             "email": "Rustacean@gmail.com"
@@ -57,7 +57,7 @@ fn test_get_rustacean() {
     let rustacean = create_test_rustacean(&client);
 
     let response = client
-        .get(format!("http://127.0.0.1:8000/rustaceans/{}", &rustacean["id"]))
+        .get(format!("{}/rustaceans/{}", APP_HOST, &rustacean["id"]))
         .send()
         .unwrap();
 
@@ -81,7 +81,7 @@ fn test_update_rustacean() {
     let client = Client::new();
     let rustacean = create_test_rustacean(&client);
     let response = client
-        .put(format!("http://127.0.0.1:8000/rustaceans/{}", &rustacean["id"]))
+        .put(format!("{}/rustaceans/{}", APP_HOST, &rustacean["id"]))
         .json(&json!({
             "name": "Rust",
             "email": "Rust@gmail.com"
@@ -109,7 +109,7 @@ fn test_delete_rustacean() {
     let client = Client::new();
     let rustacean = create_test_rustacean(&client);
     let response = client
-        .delete(format!("http://127.0.0.1:8000/rustaceans/{}", rustacean["id"]))
+        .delete(format!("{}/rustaceans/{}", APP_HOST, &rustacean["id"]))
         .send()
         .unwrap();
     
