@@ -2,8 +2,8 @@ use rocket_db_pools::Connection;
 use rocket::{response::status::{Custom, NoContent}, serde::json::{json, Json, Value}};
 use rocket::http::Status;
 use diesel::result::Error as DieselError;
-use crate::{models::{Crate, NewCrate}, repositories::CrateRepository, DbConn};
-
+use crate::{models::{Crate, NewCrate}, repositories::CrateRepository};
+use crate::rocket_routes::DbConn;
 use super::server_error;
 
 

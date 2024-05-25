@@ -4,7 +4,7 @@ use rocket::{response::status::{Custom, NoContent}, serde::json::{json, Json, Va
 use rocket::http::Status;
 use diesel::result::Error as DieselError;
 
-use crate::DbConn;
+use crate::rocket_routes::DbConn;
 
 use super::server_error;
 

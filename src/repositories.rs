@@ -1,6 +1,9 @@
 use diesel_async::{AsyncPgConnection, RunQueryDsl};
 use diesel::prelude::*;
-use crate::{models::{Crate, NewCrate, NewRustacean, Rustacean}, schema::{crates, rustaceans}};
+use crate::{
+    models::{Crate, NewCrate, NewRole, NewRustacean, NewUser, Role, Rustacean, User}, 
+    schema::{crates, roles, rustaceans, users}
+};
 
 
 
@@ -70,5 +73,27 @@ impl CrateRepository {
 
     pub async fn delete(conn: &mut AsyncPgConnection, id: i32) -> QueryResult<usize> {
         diesel::delete(crates::table.find(id)).execute(conn).await
+    }
+}
+
+pub struct UserRepository;
+
+impl UserRepository {
+    pub async fn create(conn: &mut AsyncPgConnection, new_user: NewUser) -> QueryResult<User> {
+        diesel::insert_into(users::table)
+            .values(new_user)
+            .get_result(conn)
+            .await
+    }
+}
+
+pub struct RoleRepositoty;
+
+impl RoleRepositoty {
+    pub async fn create(conn: &mut AsyncPgConnection, new_role: NewRole) -> QueryResult<Role> {
+        diesel::insert_into(roles::table)
+            .values(new_role)
+            .get_result(conn)
+            .await
     }
 }
