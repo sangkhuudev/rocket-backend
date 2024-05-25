@@ -1,4 +1,4 @@
-use clap::{value_parser, Parser, Subcommand};
+use clap::{Parser, Subcommand};
 use rocket_backend::commands::create_user;
 
 #[derive(Parser)]
@@ -59,9 +59,6 @@ async fn main() {
             match user_command {
                 UserCommands::Create { username, password, roles } => {
                     let role_codes = parse_roles(roles.as_str()).unwrap();
-                    println!("Received username: {}", username);
-                    println!("Received password: {}", password);
-                    println!("Received roles: {:?}", role_codes); 
                     create_user(username, password, role_codes).await;
                 },
                 UserCommands::List => {
