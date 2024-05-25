@@ -1,3 +1,5 @@
+use argon2::password_hash::{rand_core::OsRng, SaltString};
+use argon2::PasswordHasher;
 use diesel_async::{AsyncConnection, AsyncPgConnection};
 
 use crate::{models::NewUser, repositories::{RoleRepositoty, UserRepository}};
@@ -17,7 +19,12 @@ pub async fn create_user(
     role_codes: Vec<String>
 ) {
     let mut conn = load_database_connection().await;
-    let new_user = NewUser { username, password};
+
+    let salt = SaltString::generate(OsRng);
+    let argon2 = argon2::Argon2::default();
+    let hashed_password = argon2.hash_password(password.as_bytes(), &salt).unwrap();
+
+    let new_user = NewUser { username, password: hashed_password.to_string() };
     let user = UserRepository::create(&mut conn, new_user, role_codes).await;
 
     match user {
