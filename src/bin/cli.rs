@@ -1,5 +1,5 @@
 use clap::{Parser, Subcommand};
-use rocket_backend::commands::create_user;
+use rocket_backend::commands::{create_user, delete_user, list_users};
 
 #[derive(Parser)]
 #[command(version, about)]
@@ -62,29 +62,14 @@ async fn main() {
                     create_user(username, password, role_codes).await;
                 },
                 UserCommands::List => {
-                    list_users();
+                    list_users().await;
                 },
                 UserCommands::Delete { id } => {
-                    delete_user(id);
+                    delete_user(id).await;
                 }
             }
         },
     }
 }
 
-
-fn list_users() {
-    // In a real application, this would fetch users from a database.
-    println!("Listing users:");
-    // Example: Iterate over users in a HashMap or a database
-    // Placeholder example:
-    println!("user1: role1");
-    println!("user2: role2");
-}
-
-fn delete_user(id: i32) {
-    // In a real application, this would interact with a database.
-    println!("Deleting user: {}", id);
-    // Example: Remove user from a HashMap or a database
-}
 

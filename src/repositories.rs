@@ -135,6 +135,28 @@ impl UserRepository {
         }
         Ok(user)
     }
+
+    pub async fn find_with_roles(conn: &mut AsyncPgConnection) 
+    -> QueryResult<Vec<(User, Vec<(UserRole, Role)>)>> {
+        let users = users::table.load::<User>(conn).await.unwrap();
+        let join_result = users_roles::table
+            .inner_join(roles::table)
+            .load::<(UserRole,Role)>(conn)
+            .await?
+            .grouped_by(&users);
+
+        let result = users.into_iter().zip(join_result).collect();
+        Ok(result)
+    }
+
+    pub async fn delete(conn: &mut AsyncPgConnection, id: i32) -> QueryResult<usize> {
+        diesel::delete(
+            users_roles::table.filter(users_roles::user_id.eq(id)))
+            .execute(conn)
+            .await?;
+        diesel::delete(users::table.find(id)).execute(conn).await
+    }
+    
 }
 
 pub struct RoleRepositoty;

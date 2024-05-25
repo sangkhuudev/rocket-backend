@@ -29,3 +29,24 @@ pub async fn create_user(
         Err(err) => eprintln!("Error creating user: {:?}", err),
     }
 }
+
+pub async fn list_users() {
+    let mut conn = load_database_connection().await;
+    let users = UserRepository::find_with_roles(&mut conn).await.unwrap();
+
+    for user in users {
+        println!("User: {:?}", user);
+    }
+}
+
+pub async fn delete_user(id : i32) {
+    let mut conn = load_database_connection().await;
+    let user_id = UserRepository::delete(&mut conn, id).await;
+
+    match user_id {
+        Ok(_) => {
+            println!("User deleted successfully");
+        }
+        Err(err) => eprintln!("Error creating user: {:?}", err),
+    } 
+}
