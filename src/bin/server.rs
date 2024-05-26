@@ -1,8 +1,9 @@
 use rocket_db_pools::Database;
 use rocket_backend::rocket_routes::{
+    authorization::login, 
     crates::{create_crate, delete_crate, get_crate, get_crates, update_crate}, 
     rustaceans::{create_rustacean, delete_rustacean, get_rustacean, get_rustaceans, update_rustacean}, 
-    authorization::login, DbConn
+    CacheConn, DbConn
 };
 
 
@@ -22,6 +23,7 @@ async fn main() {
             update_crate,
             delete_crate
         ])
+        .attach(CacheConn::init())
         .attach(DbConn::init())
         .launch()
         .await;

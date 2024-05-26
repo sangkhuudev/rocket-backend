@@ -7,8 +7,13 @@ pub mod crates;
 pub mod rustaceans;
 
 #[derive(Database)]
-#[database("postgres")]
+#[database("postgres")] // "postgres" database name in the docker-compose.yml: section app (environment)
 pub struct DbConn(rocket_db_pools::diesel::PgPool);
+
+
+#[derive(Database)]
+#[database("redis")]  // "redis" database name in the docker-compose.yml: section app (environment)
+pub struct CacheConn(rocket_db_pools::deadpool_redis::Pool);
 
 pub fn server_error(e: Box< dyn std::error::Error>) -> Custom<Value>{
     rocket::error!("{}", e);
