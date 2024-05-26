@@ -2,8 +2,9 @@ use rocket_db_pools::Database;
 use rocket::{response::status::Custom, serde::json::{json, Value}};
 use rocket::http::Status;
 
-pub mod rustaceans;
+pub mod authorization;
 pub mod crates;
+pub mod rustaceans;
 
 #[derive(Database)]
 #[database("postgres")]

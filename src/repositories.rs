@@ -148,6 +148,9 @@ impl UserRepository {
         let result = users.into_iter().zip(join_result).collect();
         Ok(result)
     }
+    pub async fn find_by_username(conn: &mut AsyncPgConnection, username: &String) -> QueryResult<User> {
+        users::table.filter(users::username.eq(username)).get_result(conn).await
+    }
 
     pub async fn delete(conn: &mut AsyncPgConnection, id: i32) -> QueryResult<usize> {
         diesel::delete(
