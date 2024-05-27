@@ -97,7 +97,7 @@ impl UserRepository {
     pub async fn create(
         conn: &mut AsyncPgConnection,
         new_user: NewUser,
-        role_codes: Vec<String>,
+        role_codes: Vec<RoleCode>,
     ) -> QueryResult<User> {
         let user: User = diesel::insert_into(users::table)
             .values(new_user)
@@ -108,7 +108,7 @@ impl UserRepository {
             let new_user_role = {
                 // Check if role_code exists, we set user_id = user.id (users table)
                 // and role_id = role.id (roles table)
-                if let Ok(role) = RoleRepositoty::find_by_code(conn, role_code.to_owned()).await {
+                if let Ok(role) = RoleRepositoty::find_by_code(conn, &role_code).await {
                     NewUserRole {
                         user_id: user.id,
                         role_id: role.id,
@@ -116,9 +116,10 @@ impl UserRepository {
                 } else {
                     // if role does not exist, we create new_role on roles table
                     // and repeat above step
+                    let name = role_code.to_string();
                     let new_role = NewRole {
-                        code: role_code.to_owned(),
-                        name: role_code.to_owned(),
+                        code: role_code,
+                        name
                     };
                     let role = RoleRepositoty::create(conn, new_role).await?;
                     NewUserRole {
@@ -176,7 +177,7 @@ impl RoleRepositoty {
             .await
     }
 
-    pub async fn find_by_code(conn: &mut AsyncPgConnection, code: String) -> QueryResult<Role> {
+    pub async fn find_by_code(conn: &mut AsyncPgConnection, code: &RoleCode) -> QueryResult<Role> {
         roles::table.filter(roles::code.eq(code)).first(conn).await
     }
 

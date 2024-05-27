@@ -1,4 +1,4 @@
-use reqwest::StatusCode;
+use reqwest::{blocking::Client, StatusCode};
 use serde_json::{json, Value};
 
 use crate::common::*;
@@ -60,6 +60,11 @@ fn test_get_crates() {
     let json_object: Value = response.json().unwrap();
     assert!(json_object.as_array().unwrap().contains(&a_crate1));
     assert!(json_object.as_array().unwrap().contains(&a_crate2));
+
+    // Test for unloggin user
+    let client = Client::new();
+    let response = client.get(format!("{}/crates", APP_HOST)).send().unwrap();
+    assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
 
     // Cleanup
     delete_test_crate(&client, a_crate1);

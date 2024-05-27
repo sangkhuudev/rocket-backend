@@ -1,4 +1,4 @@
-use reqwest::StatusCode;
+use reqwest::{blocking::Client, StatusCode};
 use rocket::serde::json::{serde_json::json, Value};
 
 use crate::common::*;
@@ -6,9 +6,11 @@ pub mod common;
 
 #[test]
 fn test_get_rustaceans() {
+    // Setup
     let client = get_client_with_logged_in();
     let rustacean1 = create_test_rustacean(&client);
     let rustacean2 = create_test_rustacean(&client);
+    // Test with loggin user
     let response = client
         .get(format!("{}/rustaceans", APP_HOST))
         .send()
@@ -18,6 +20,11 @@ fn test_get_rustaceans() {
     let json_object: Value = response.json().unwrap();
     assert!(json_object.as_array().unwrap().contains(&rustacean1));
     assert!(json_object.as_array().unwrap().contains(&rustacean2));
+    // Test with unlogin user
+     // Test for unloggin user
+    let client = Client::new();
+    let response = client.get(format!("{}/rustaceans", APP_HOST)).send().unwrap();
+    assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
 
     delete_test_rustacean(&client, rustacean1);
     delete_test_rustacean(&client, rustacean2);

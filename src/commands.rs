@@ -1,7 +1,9 @@
 
+use std::str::FromStr;
+
 use diesel_async::{AsyncConnection, AsyncPgConnection};
 
-use crate::{auth::hash_password, models::NewUser, repositories::{RoleRepositoty, UserRepository}};
+use crate::{auth::hash_password, models::{NewUser, RoleCode}, repositories::{RoleRepositoty, UserRepository}};
 
 
 async fn load_database_connection() -> AsyncPgConnection {
@@ -20,7 +22,9 @@ pub async fn create_user(
     let mut conn = load_database_connection().await;
     let hashed_password = hash_password(password).expect("Cannot hash the password");
     let new_user = NewUser { username, password: hashed_password};
-    let user = UserRepository::create(&mut conn, new_user, role_codes).await;
+    // Convert Vec<String> into RoleCode enum
+    let roles_enum = role_codes.iter().map(|v| RoleCode::from_str(v.as_str()).unwrap()).collect();
+    let user = UserRepository::create(&mut conn, new_user, roles_enum).await;
 
     match user {
         Ok(user) => {
