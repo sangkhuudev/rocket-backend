@@ -143,7 +143,7 @@ impl FromSql<Text, Pg> for RoleCode {
             b"admin" => Ok(RoleCode::Admin),
             b"editor" => Ok(RoleCode::Editor),
             b"viewer" => Ok(RoleCode::Viewer),
-            _ => Err("Unrecognized enum variant".into()),
+            _ => Ok(RoleCode::Viewer)
         }
     }
 }

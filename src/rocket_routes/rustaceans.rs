@@ -6,7 +6,7 @@ use diesel::result::Error as DieselError;
 
 use crate::rocket_routes::DbConn;
 
-use super::server_error;
+use super::{server_error, EditorUser};
 
 
 #[rocket::get("/rustaceans")]
@@ -31,7 +31,7 @@ pub async fn get_rustacean(mut db: Connection<DbConn>, id: i32, _user: User) -> 
 pub async fn create_rustacean(
     mut db: Connection<DbConn>, 
     new_rustacean: Json<NewRustacean>,
-    _user: User
+    _user: EditorUser
 ) -> Result<Custom<Value>, Custom<Value>> {
     RustaceanRepository::create(&mut db, new_rustacean.into_inner()).await
         .map(|rustacean| Custom(Status::Created, json!(rustacean)))
@@ -43,7 +43,7 @@ pub async fn create_rustacean(
 pub async fn update_rustacean(
     mut db: Connection<DbConn>,
     id: i32,
-    _user: User,
+    _user: EditorUser,
     rustacean: Json<Rustacean>,
 ) -> Result<Value, Custom<Value>> {
     RustaceanRepository::update(&mut db, id, rustacean.into_inner()).await
@@ -53,7 +53,7 @@ pub async fn update_rustacean(
 
 
 #[rocket::delete("/rustaceans/<id>")]
-pub async fn delete_rustacean(mut db: Connection<DbConn>, id: i32, _user: User) -> Result<NoContent, Custom<Value>> {
+pub async fn delete_rustacean(mut db: Connection<DbConn>, id: i32, _user: EditorUser) -> Result<NoContent, Custom<Value>> {
     RustaceanRepository::delete(&mut db, id).await
         .map(|_| NoContent)
         .map_err(|e| server_error(e.into()))

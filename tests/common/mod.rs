@@ -49,7 +49,7 @@ pub fn delete_test_crate(client: &Client, a_crate: Value) {
         .unwrap();
 }
 
-pub fn get_client_with_logged_in() -> Client {
+pub fn get_logged_in_client(username: &str, roles: &str) -> Client {
     //setup
     let _ = Command::new("cargo")
         .args([
@@ -59,11 +59,11 @@ pub fn get_client_with_logged_in() -> Client {
             "users",
             "create",
             "--username",
-            "test_admin",
+            username,
             "--password",
             "123456",
             "--roles",
-            "admin",
+            roles,
         ])
         .output();
 
@@ -71,7 +71,7 @@ pub fn get_client_with_logged_in() -> Client {
     let response = client
         .post(format!("{}/login", APP_HOST))
         .json(&json!({
-            "username": "test_admin",
+            "username": username,
             "password": "123456"
         }))
         .send()
@@ -89,4 +89,12 @@ pub fn get_client_with_logged_in() -> Client {
         header::HeaderValue::from_str(&header_value).unwrap()
     );
     ClientBuilder::new().default_headers(headers).build().unwrap()
+}
+
+pub fn get_client_with_logged_in_viewer() -> Client {
+    get_logged_in_client("test_viewer", "viewer")
+}
+
+pub fn get_client_with_logged_in_admin() -> Client {
+    get_logged_in_client("test_admin", "admin")
 }

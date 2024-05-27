@@ -2,7 +2,7 @@ use rocket::{request::{self, Outcome, FromRequest}, response::status::Custom, se
 use rocket::http::Status;
 use rocket::Request;
 use rocket_db_pools::{deadpool_redis::redis::AsyncCommands, Connection, Database};
-use crate::{models::User, repositories::UserRepository};
+use crate::{models::{RoleCode, User}, repositories::{RoleRepositoty, UserRepository}};
 use rocket::outcome::try_outcome;
 
 pub mod authorization;
@@ -56,5 +56,46 @@ impl<'r> FromRequest<'r> for User {
             Ok(user) => Outcome::Success(user),
             Err(_) => Outcome::Error((Status::Unauthorized, ())),
         }
+    }
+}
+
+pub struct EditorUser(User);
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for EditorUser {
+    type Error = ();
+
+    async fn from_request(req: &'r Request<'_>) -> request::Outcome<Self, Self::Error> {
+        // Retrieve a connection to the database
+        let mut db = try_outcome!(req.guard::<Connection<DbConn>>().await.map_error(|(status, _)| (status, ())));
+        
+        // Retrieve the User object from the request
+        let user = try_outcome!(req.guard::<User>().await.map_error(|(status, _)| (status, ())));
+        
+        // Find roles for the user
+        match RoleRepositoty::find_by_user(&mut db, &user).await {
+            Ok(roles) => {
+                rocket::info!("Roles assigned: {:?}", roles);
+                
+                // Check if the user has either Editor or Admin roles
+                let is_editor = roles.iter().any(|r| {
+                    match r.code {
+                        RoleCode::Editor | RoleCode::Admin => true,
+                        _ => false,
+                    }
+                });
+
+                rocket::info!("Is editor: {:?}", is_editor);
+
+                if is_editor {
+                    return Outcome::Success(EditorUser(user));
+                }
+            },
+            Err(e) => {
+                rocket::error!("Error fetching roles: {:?}", e);
+            }
+        }
+        
+        // If the user is not an editor, return Unauthorized
+        Outcome::Error((Status::Unauthorized, ()))
     }
 }

@@ -4,7 +4,7 @@ use rocket::http::Status;
 use diesel::result::Error as DieselError;
 use crate::{models::{Crate, NewCrate, User}, repositories::CrateRepository};
 use crate::rocket_routes::DbConn;
-use super::server_error;
+use super::{server_error, EditorUser};
 
 
 #[rocket::get("/crates")]
@@ -29,7 +29,7 @@ pub async fn get_crate(mut db: Connection<DbConn>, id: i32, _user: User) -> Resu
 pub async fn create_crate(
     mut db: Connection<DbConn>, 
     new_crate: Json<NewCrate>,
-    _user: User
+    _user: EditorUser
 ) -> Result<Custom<Value>, Custom<Value>> {
     CrateRepository::create(&mut db, new_crate.into_inner()).await
         .map(|a_crate| Custom(Status::Created, json!(a_crate)))
@@ -41,7 +41,7 @@ pub async fn create_crate(
 pub async fn update_crate(
     mut db: Connection<DbConn>,
     id: i32, 
-    _user: User,
+    _user: EditorUser,
     a_crate: Json<Crate>,
 ) -> Result<Value, Custom<Value>> {
     CrateRepository::update(&mut db, id, a_crate.into_inner()).await
@@ -51,7 +51,7 @@ pub async fn update_crate(
 
 
 #[rocket::delete("/crates/<id>")]
-pub async fn delete_crate(mut db: Connection<DbConn>, id: i32, _user: User) -> Result<NoContent, Custom<Value>> {
+pub async fn delete_crate(mut db: Connection<DbConn>, id: i32, _user: EditorUser) -> Result<NoContent, Custom<Value>> {
     CrateRepository::delete(&mut db, id).await
         .map(|_| NoContent)
         .map_err(|e| server_error(e.into()))
