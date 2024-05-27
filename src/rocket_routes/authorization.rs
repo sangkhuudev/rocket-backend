@@ -11,13 +11,17 @@ pub async fn login(
     mut cache: Connection<CacheConn>,
     credentials: Json<Credentials>
 ) -> Result<Value, Custom<Value>> {
-    let user = UserRepository::find_by_username(&mut db, &credentials.username).await
-        .map_err(|e| server_error(e.into()))?;
+    let user = match UserRepository::find_by_username(&mut db, &credentials.username).await {
+        Ok(user) => user,
+        Err(diesel::result::Error::NotFound) => return Err(Custom(Status::Unauthorized, json!("Wrong credentials"))),
+        Err(e) => return Err(server_error(e.into())),
+    };
+    
 
     let session_id = authorize_user(&user, credentials.into_inner())
         .map_err(|_| Custom(Status::Unauthorized, json!("Wrong credentials")))?;
     // Set and store session_id in redis database
-    cache.set_ex(
+    cache.set_ex::<String, i32, ()>(
         format!("sessions/{}", session_id), 
         user.id,
         3*60*60

@@ -1,5 +1,6 @@
-use reqwest::{blocking::Client, StatusCode};
+use reqwest::{blocking::{Client, ClientBuilder}, header, StatusCode};
 use serde_json::{Value, json};
+use std::process::Command;
 
 pub static APP_HOST: &'static str = "http://127.0.0.1:8000";
 
@@ -46,4 +47,46 @@ pub fn delete_test_crate(client: &Client, a_crate: Value) {
         .delete(format!("{}/crates/{}", APP_HOST, a_crate["id"]))
         .send()
         .unwrap();
+}
+
+pub fn get_client_with_logged_in() -> Client {
+    //setup
+    let _ = Command::new("cargo")
+        .args([
+            "run",
+            "--bin",
+            "cli",
+            "users",
+            "create",
+            "--username",
+            "test_admin",
+            "--password",
+            "123456",
+            "--roles",
+            "admin",
+        ])
+        .output();
+
+    let client = Client::new();
+    let response = client
+        .post(format!("{}/login", APP_HOST))
+        .json(&json!({
+            "username": "test_admin",
+            "password": "123456"
+        }))
+        .send()
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+
+    let object: Value = response.json().unwrap();
+    assert!(object.get("token").is_some());
+
+    let header_value = format!("Bearer {}", object["token"].as_str().unwrap());
+
+    let mut headers = header::HeaderMap::new();
+    headers.insert(
+        header::AUTHORIZATION,
+        header::HeaderValue::from_str(&header_value).unwrap()
+    );
+    ClientBuilder::new().default_headers(headers).build().unwrap()
 }

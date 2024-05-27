@@ -151,7 +151,11 @@ impl UserRepository {
     pub async fn find_by_username(conn: &mut AsyncPgConnection, username: &String) -> QueryResult<User> {
         users::table.filter(users::username.eq(username)).get_result(conn).await
     }
-
+    
+    pub async fn find(conn: &mut AsyncPgConnection, id: i32) -> QueryResult<User> {
+        users::table.find(id).get_result(conn).await
+    }
+    
     pub async fn delete(conn: &mut AsyncPgConnection, id: i32) -> QueryResult<usize> {
         diesel::delete(
             users_roles::table.filter(users_roles::user_id.eq(id)))

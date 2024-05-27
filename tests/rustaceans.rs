@@ -1,12 +1,12 @@
-use reqwest::{blocking::Client, StatusCode};
+use reqwest::StatusCode;
 use rocket::serde::json::{serde_json::json, Value};
 
-use crate::common::{create_test_rustacean, delete_test_rustacean, APP_HOST};
+use crate::common::*;
 pub mod common;
 
 #[test]
 fn test_get_rustaceans() {
-    let client = Client::new();
+    let client = get_client_with_logged_in();
     let rustacean1 = create_test_rustacean(&client);
     let rustacean2 = create_test_rustacean(&client);
     let response = client
@@ -25,7 +25,7 @@ fn test_get_rustaceans() {
 
 #[test]
 fn test_create_rustacean() {
-    let client = Client::new();
+    let client = get_client_with_logged_in();
     let response = client
         .post(format!("{}/rustaceans", APP_HOST))
         .json(&json!({
@@ -54,7 +54,7 @@ fn test_create_rustacean() {
 #[test]
 fn test_get_rustacean() {
     //Setup
-    let client = Client::new();
+    let client = get_client_with_logged_in();
     let rustacean = create_test_rustacean(&client);
 
     //Test
@@ -89,7 +89,7 @@ fn test_get_rustacean() {
 
 #[test]
 fn test_update_rustacean() {
-    let client = Client::new();
+    let client = get_client_with_logged_in();
     let rustacean = create_test_rustacean(&client);
     let response = client
         .put(format!("{}/rustaceans/{}", APP_HOST, &rustacean["id"]))
@@ -117,7 +117,7 @@ fn test_update_rustacean() {
 
 #[test]
 fn test_delete_rustacean() {
-    let client = Client::new();
+    let client = get_client_with_logged_in();
     let rustacean = create_test_rustacean(&client);
     let response = client
         .delete(format!("{}/rustaceans/{}", APP_HOST, &rustacean["id"]))
