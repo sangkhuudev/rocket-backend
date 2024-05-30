@@ -1,8 +1,11 @@
-use rocket::{request::{self, Outcome, FromRequest}, response::status::Custom, serde::json::{json, Value}};
+use rocket::{
+    fairing::{Fairing, Info, Kind}, request::{self, FromRequest, Outcome}, 
+    response::status::Custom, serde::json::{json, Value}, Response
+};
 use rocket::http::Status;
 use rocket::Request;
 use rocket_db_pools::{deadpool_redis::redis::AsyncCommands, Connection, Database};
-use crate::{models::{RoleCode, User}, repositories::{RoleRepositoty, UserRepository}};
+use crate::{mail::HtmlMailer, models::{RoleCode, User}, repositories::{RoleRepositoty, UserRepository}};
 use rocket::outcome::try_outcome;
 
 pub mod authorization;
@@ -21,6 +24,30 @@ pub struct CacheConn(rocket_db_pools::deadpool_redis::Pool);
 pub fn server_error(e: Box< dyn std::error::Error>) -> Custom<Value>{
     rocket::error!("{}", e);
     Custom(Status::InternalServerError, json!("Error"))
+}
+
+#[rocket::options("/<_route_args..>")]
+pub fn options(_route_args: Option<std::path::PathBuf>) {
+    // Just to add CORS via fairings
+}
+pub struct Cors;
+
+#[rocket::async_trait]
+impl Fairing for Cors {
+    fn info(&self) -> Info {
+        Info {
+            name: "Append CORS header into responses",
+            kind: Kind::Response
+        }
+    }
+
+    async fn on_response<'r>(&self, _req: &'r Request<'_>, res: &mut Response<'r>) {
+        res.set_raw_header("Access-Control-Allow-Origin", "*");
+        res.set_raw_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+        res.set_raw_header("Access-Control-Allow-Headers", "*");
+        res.set_raw_header("Access-Control-Allow-Credentials", "true");
+
+    }
 }
 
 #[rocket::async_trait]
@@ -97,5 +124,33 @@ impl<'r> FromRequest<'r> for EditorUser {
         
         // If the user is not an editor, return Unauthorized
         Outcome::Error((Status::Unauthorized, ()))
+    }
+}
+
+
+// In case we need to send an email in an endpoint
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for HtmlMailer {
+    type Error = ();
+
+    async fn from_request(_request: &'r Request<'_>) -> Outcome<Self, Self::Error> {
+        if let Ok(tera) = tera::Tera::new("templates/**/*.html") {
+
+            let smtp_host = std::env::var("SMTP_HOST").expect("SMTP_HOST must be set");
+            let smtp_port = std::env::var("SMTP_PORT").expect("SMTP_PORT must be set");
+            let smtp_username = std::env::var("SMTP_USERNAME").expect("SMTP_USERNAME must be set");
+            let smtp_password = std::env::var("SMTP_PASSWORD").expect("SMTP_PASSWORD must be set");
+    
+            let mailer = HtmlMailer {
+                template_engine: tera,
+                smtp_host,
+                smtp_port,
+                smtp_username,
+                smtp_password,
+            };
+            return Outcome::Success(mailer)
+        }
+        // Probably a parse error when loading templates. Or templates folder not there?
+        Outcome::Error((Status::InternalServerError, ()))
     }
 }
