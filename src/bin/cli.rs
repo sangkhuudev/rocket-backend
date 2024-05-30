@@ -1,5 +1,5 @@
-use clap::{Parser, Subcommand};
-use rocket_backend::commands::{create_user, delete_user, list_users};
+use clap::{Args, Parser, Subcommand};
+use rocket_backend::commands::{create_user, delete_user, digest_send, list_users};
 
 #[derive(Parser)]
 #[command(version, about)]
@@ -13,6 +13,18 @@ enum MainCommand {
     /// User management
     #[command(subcommand)]
     Users(UserCommands),
+    /// Send a digest latest crates via email
+    Digest(DigestCommand),
+
+}
+
+#[derive(Args)]
+struct DigestCommand {
+    #[arg(short, long)]
+    email: String,
+
+    #[arg(long)]
+    hours_since: i32,
 }
 
 #[derive(Subcommand)]
@@ -33,6 +45,7 @@ enum UserCommands {
         id: i32,
     }
 }
+
 
 // Custom function to parse roles separated by commas
 fn parse_roles(s: &str) -> Result<Vec<String>, String> {
@@ -69,6 +82,11 @@ async fn main() {
                 }
             }
         },
+
+        MainCommand::Digest(command) => {
+            digest_send(command.email, command.hours_since).await;
+        }
+
     }
 }
 

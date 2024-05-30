@@ -14,6 +14,14 @@ services:
           postgres={url=postgres://postgres:postgres@postgres/app_db},
           redis={url=redis://redis:6379}  
         }
+      - SMTP_HOST=smtp.mailtrap.io
+      - SMTP_PORT=2525
+      - SMTP_USERNAME=/run/secrets/mailtrap_username
+      - SMTP_PASSWORD=/run/secrets/mailtrap_password
+    secrets:
+      - mailtrap_username
+      - mailtrap_password
+  
   postgres:
     image: postgres:latest
     environment:
@@ -23,3 +31,9 @@ services:
     command: ["postgres", "-c", "log_statement=all"]  
   redis:
     image: redis:latest
+
+secrets:
+  mailtrap_username:
+    file: ./secrets/mailtrap_username
+  mailtrap_password:
+    file: ./secrets/mailtrap_password
