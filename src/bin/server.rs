@@ -1,6 +1,6 @@
 use rocket_db_pools::Database;
 use rocket_backend::rocket_routes::{
-    authorization::login, options, crates::{create_crate, delete_crate, get_crate, get_crates, update_crate}, rustaceans::{create_rustacean, delete_rustacean, get_rustacean, get_rustaceans, update_rustacean}, CacheConn, Cors, DbConn
+    authorization::{me, login}, options, crates::{create_crate, delete_crate, get_crate, get_crates, update_crate}, rustaceans::{create_rustacean, delete_rustacean, get_rustacean, get_rustaceans, update_rustacean}, CacheConn, Cors, DbConn
 };
 
 
@@ -10,6 +10,7 @@ async fn main() {
         .mount("/", rocket::routes![
             options,
             login,
+            me,
             get_rustaceans,
             get_rustacean,
             create_rustacean,

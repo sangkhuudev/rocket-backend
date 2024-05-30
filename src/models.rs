@@ -55,6 +55,7 @@ pub struct User {
     #[serde(skip_deserializing)]
     pub id: i32,
     pub username: String,
+    #[serde(skip_serializing)]
     pub password: String,
     #[serde(skip_deserializing)]
     pub created_at: NaiveDateTime,

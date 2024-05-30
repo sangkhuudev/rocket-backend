@@ -53,3 +53,21 @@ fn test_login() {
         .unwrap();
     assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
 }
+
+#[test]
+fn test_me() {
+    let client = get_client_with_logged_in_viewer();
+    // Test for successful login
+    let response = client
+        .get(format!("{}/me", APP_HOST))
+        .send()
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+
+    let object: Value = response.json().unwrap();
+    assert!(object.get("id").is_some());
+    assert!(object.get("username").is_some());
+    assert!(object.get("created_at").is_some());
+    assert!(object.get("password").is_none());
+    assert_eq!(object["username"], "test_viewer");
+}
